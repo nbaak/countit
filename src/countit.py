@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from flask import Flask, jsonify, request
-from metrics import Metrics, Metric
+from countit_metrics import Metrics, Metric
 
 app = Flask(__name__)
 metrics = Metrics()
@@ -9,10 +9,10 @@ metrics = Metrics()
 # Define routes
 @app.route('/')
 def home():
-    return "Hello, World!"
+    return "Count It! - Because it counts!"
 
 
-@app.route('/metrics', methods=['GET'])
+@app.route('/countit_metrics', methods=['GET'])
 def get_metrics() -> str:
     """
     Endpoint to get the current value of the counter.
@@ -22,8 +22,7 @@ def get_metrics() -> str:
 
 
 @app.route('/new/<metric_name>')
-@app.route('/new/<metric_name>/<metric_type>')
-def add_metric(metric_name:str, metric_type:str="Counter"):
+def add_metric(metric_name:str):
     """
     Add new Metric if not already existing
     """
@@ -46,12 +45,12 @@ def update_metric(metric_name:str):
     value = data.get('value', 1)
     metric:Metric = metrics.get_metric(metric_name)
     
-    if metric and label:
-        metric.update(label, value)        
-        return jsonify({'message': f'Metric {metric_name} incremented by {value}'}), 200
-    
     if not label:
         return jsonify({'error': 'Missing label'}), 404
+    
+    if metric:
+        metric.update(label, value)        
+        return jsonify({'message': f'Metric {metric_name} incremented by {value}'}), 200
 
     return jsonify({'error': 'Metric not found'}), 404
     
