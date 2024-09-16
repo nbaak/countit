@@ -1,60 +1,145 @@
 import pickle
+from typing import Union
+import os
 
 
 class Metric:
     
-    def __init__(self, metric_name:str):
+    def __init__(self, metric_name:str, data_location:str):
         self.metric_name = metric_name
+        
+        self.data_location = data_location
+        if not os.path.isdir(self.data_location):
+            os.mkdir(self.data_location)
+            
+        self.data = {}
+        
+    def inc(self, label, value:Union[int, float]=1) -> Union[int, float]:
+        if not label in self.data:
+            self.data[label] = 0
+        
+        self.data[label] += value
+        
+        self.save()
+        return self.data.get(label, None)
     
-    def save(self, file:str):
-        pass
+    def update(self, label, value:Union[int, float]=1) -> Union[int, float]:
+        self.inc(label, value)
+        
+    def set(self, label:str, value:Union[int, float]=1) -> Union[int, float]:
+        if not label in self.data:
+            self.data[label] = value
+        else:
+            self.data[label] = value
+        
+        self.save()
+        return self.data.get(label, None)
+        
+    def get(self, label):
+        try:
+            return self.data.get(label, None)
+        except Exception as e:
+            print(e)
+            
+    def remove(self, label):
+        if label in self.data:
+            drop = self.data.pop(label)
+            if drop: return True
+        
+        return False
+            
+    def labels(self):
+        return [label for label in self.data.keys()]
     
-    def load(self, file:str):
-        pass
+    def save(self):
+        path = os.path.join(self.data_location, f"{self.metric_name}.dat") 
+        with open(path, 'wb') as f:
+            pickle.dump(self.data, f)
+    
+    def load(self):
+        path = os.path.join(self.data_location, f"{self.metric_name}.dat")
+        try:
+            with open(path, 'rb') as f:
+                self.data = pickle.load(f)
+        except Exception as e:
+            print(e)
+            
+    def __str__(self):
+        return f"{self.metric_name}"
     
     def __repr__(self):
         return f"{self.metric_name}"
 
-class Counter(Metric):
-    
-    def __init__(self, metric_name:str):
-        super().__init__(metric_name)        
-        self.value = 0
-        
-    def inc(self, value:int=1):
-        self.value += value
-        
-    def get(self):
-        return self.value
-    
-    def __str__(self):
-        return f"{self.metric_name}({self.value})"
-    
-    
-class Dictionary(Metric):
-    
-    def __init__(self, metric_name:str):
-        super().__init(metric_name)
-        self.table = {}
-        
-    def update(self, label, value=1):
-        if label not in self.table:
-            self.table[label] = 0
-        self.table[label] += value
-        
-    def get(self, label:str):
-        if label in self.table:
-            return  self.table[label]
-        return None
-    
-    def get_all(self):
-        return [(k,v) for k,v in self.table.items()]
-    
-    def __str__(self):
-        return f"{self.metric_name}"
-    
 
-# TODO: contiuous - table but label is timestamp
+class Metrics:
     
+    def __init__(self, data_location:str="./data_metrics"):
+        self.metrics = {}
+        self.data_path = data_location
         
+    def add_metric(self, metric_name:str) -> Metric:
+        if metric_name not in self.metrics:
+            self.metrics[metric_name] = Metric(metric_name, self.data_path)
+            
+        return self.metrics[metric_name]
+    
+    def remove_metric(self, metric_name:str) -> bool:
+        if metric_name in self.metrics:
+            dropping = self.metrics.pop(metric_name)
+            if dropping: return True
+        
+        return False
+            
+    def get_metric(self, metric_name:str) -> Metric:
+        return self.metrics.get(metric_name, None)
+        
+    def show_metrics(self):
+        return [str(metric) for metric in self.metrics.values()]
+                
+    def save(self):
+        if not os.path.isdir(self.data_path):
+            os.mkdir(self.data_path)
+        
+        for metric in self.metrics.values():
+            metric.save()
+    
+    def load(self):
+        try:
+            files = os.listdir(self.data_path)
+        except Exception as e:
+            print(e)
+            return
+        
+        for file in files:
+            metric_name = file.split('.')[0]
+            metric = self.add_metric(metric_name)
+            metric.load()
 
+
+def test():
+    metrics = Metrics(data_location='./data_metrics')
+    metrics.load()
+    counter = metrics.add_metric('Counter')
+    
+    counter.inc('up', 1)
+    counter.inc('up', 1)
+    counter.inc('up', 3)
+    
+    counter.set('dd', 7)
+    
+    print(f"Counter -up-  has value {counter.get('up')}")
+    print(f"Counter -dd- has value {counter.get('dd')}")
+    print(f"Counter -DDD- has value {counter.get('DDD')}")
+    
+    print(metrics.show_metrics())
+    print(counter.labels())
+    counter.remove('up')
+    print(counter.labels())
+    
+    # metrics.remove_metric('Counter')
+    
+    metrics.save()
+
+        
+if __name__ == "__main__":
+    test()

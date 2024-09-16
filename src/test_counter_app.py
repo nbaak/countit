@@ -1,34 +1,39 @@
 #!/usr/bin/env python3
 
 import requests
+import inspect
 
 BASE_URL = 'http://localhost:5000'
 
 
 def test_home():
+    print(f"running {inspect.stack()[0][3]}")
     response = requests.get(f'{BASE_URL}/')
     assert response.status_code == 200
     assert response.text == 'Hello, World!'
 
 
 def test_add_metric():
-    response = requests.get(f'{BASE_URL}/new-metric/test_counter')
+    print(f"running {inspect.stack()[0][3]}")
+    response = requests.get(f'{BASE_URL}/new/test_counter')
     assert response.status_code == 201
     assert response.json() == {'message': 'test_counter added'}
     
 
 def test_show_metrics():
+    print(f"running {inspect.stack()[0][3]}")
     response = requests.get(f'{BASE_URL}/metrics')
     assert 'test_counter' in response.json()
 
 
 def test_update_counter():
+    print(f"running {inspect.stack()[0][3]}")
     # Ensure metric exists first
-    requests.get(f'{BASE_URL}/new-metric/test_counter')
+    requests.get(f'{BASE_URL}/new/test_counter')
 
     # Update the counter
-    response = requests.post(f'{BASE_URL}/update-metric/test_counter', json={'value': 5})
-    assert response.status_code == 200
+    response = requests.post(f'{BASE_URL}/update/test_counter', json={'value': 5})
+    assert response.status_code == 200, f"received: {response.status_code}"
 
     # Validate metric update
     response = requests.get(f'{BASE_URL}/metrics')
@@ -39,13 +44,15 @@ def test_update_counter():
 
 
 def test_add_invalid_metric_type():
-    response = requests.get(f'{BASE_URL}/new-metric/test_invalid/InvalidType')
+    print(f"running {inspect.stack()[0][3]}")
+    response = requests.get(f'{BASE_URL}/new/test_invalid/InvalidType')
     assert response.status_code == 400
     assert response.json() == {'error': 'Invalid type'}
 
 
 def test_update_metric_not_found():
-    response = requests.post(f'{BASE_URL}/update-metric/non_existent_metric', json={'value': 10})
+    print(f"running {inspect.stack()[0][3]}")
+    response = requests.post(f'{BASE_URL}/update/non_existent_metric', json={'value': 10})
     assert response.status_code == 404
     assert response.json() == {'error': 'Metric not found'}
 
