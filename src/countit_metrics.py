@@ -13,7 +13,7 @@ class Metric:
         if not os.path.isdir(self.data_location):
             os.mkdir(self.data_location)
             
-        self.data = {}
+        self.data = {'__default_label__': 0}
         
         # experimental
         if labels:
@@ -125,8 +125,9 @@ class Metrics:
         
         for file in files:
             metric_name = file.split('.')[0]
-            metric = self.add_metric(metric_name)
+            metric, _ = self.add_metric(metric_name)
             metric.load()
+            
 
 
 def test():

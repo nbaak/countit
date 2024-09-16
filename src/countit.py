@@ -51,11 +51,17 @@ def update_metric(metric_name:str):
     """
     Update the specified metric.
     """
-    data = request.json
-    label = data.get('label')
+    try:
+        data = request.json
+    except:
+        data = {}
+        
+    label = data.get('label', "__default_label__")
     value = data.get('value', 1)
+    
     metric:Metric = metrics.get_metric(metric_name)
     
+    # because lists are not hashable
     if type(label) == list:
         label = tuple(label)
     
@@ -65,10 +71,40 @@ def update_metric(metric_name:str):
         return jsonify({'error': 'Missing label'}), 404
     
     if metric:
+        print("Update:", label, "by", value)
         metric.update(label, value)        
         return jsonify({'success': metric.get(label)}), 202
 
     return jsonify({'error': 'Metric not found'}), 404
+
+@app.route("/labels/<metric_name>", methods=["GET"])
+def get_labels(metric_name:str):
+    metric:Metric = metrics.get_metric(metric_name)
+    
+    if metric:
+        labels = metric.labels()
+        return jsonify({"success": labels}), 201
+    
+    return jsonify({'error': 'Metric not found'}), 404
+
+
+@app.route("/get/<metric_name>", methods=["POST"])
+def get_metric_label_value(metric_name:str):
+    try:
+        data = request.json
+    except:
+        data = {}
+        
+    label = data.get('label', "__default_label__")    
+    metric:Metric = metrics.get_metric(metric_name)
+    
+    if metric and label:
+        value = metric.get(label)
+        if value != None: return jsonify({"success": value}), 201
+        else: return jsonify({'error': 'Label not found'}), 404
+            
+    return jsonify({'error': 'Metric not found'}), 404   
+
     
         
 if __name__ == '__main__':
