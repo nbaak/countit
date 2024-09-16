@@ -1,11 +1,12 @@
 import pickle
 from typing import Union
 import os
+from countit_status_codes import StatusCodes
 
 
 class Metric:
     
-    def __init__(self, metric_name:str, data_location:str):
+    def __init__(self, metric_name:str, data_location:str, labels:list=None):
         self.metric_name = metric_name
         
         self.data_location = data_location
@@ -13,6 +14,11 @@ class Metric:
             os.mkdir(self.data_location)
             
         self.data = {}
+        
+        # experimental
+        if labels:
+            for label in labels:
+                self.data[label] = 0
         
     def inc(self, label, value:Union[int, float]=1) -> Union[int, float]:
         if not label in self.data:
@@ -77,11 +83,18 @@ class Metrics:
         self.metrics = {}
         self.data_path = data_location
         
-    def add_metric(self, metric_name:str) -> Metric:
+    def add_metric(self, metric_name:str) -> Union[Metric, int]:
+        status_code = None
+        
         if metric_name not in self.metrics:
             self.metrics[metric_name] = Metric(metric_name, self.data_path)
+            status_code = StatusCodes.NEW
+        elif metric_name in self.metrics:
+            status_code = StatusCodes.EXISTING
+        else:
+            status_code = StatusCodes.ERROR
             
-        return self.metrics[metric_name]
+        return self.metrics[metric_name], status_code
     
     def remove_metric(self, metric_name:str) -> bool:
         if metric_name in self.metrics:
@@ -133,7 +146,7 @@ def test():
     
     print(metrics.show_metrics())
     print(counter.labels())
-    counter.remove('up')
+    # counter.remove('up')
     print(counter.labels())
     
     # metrics.remove_metric('Counter')

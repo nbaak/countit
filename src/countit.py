@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 from flask import Flask, jsonify, request
 from countit_metrics import Metrics, Metric
+from countit_status_codes import StatusCodes
 
 app = Flask(__name__)
 metrics = Metrics()
+try:
+    metrics.load()
+except:
+    pass
 
 
 # Define routes
@@ -26,10 +31,16 @@ def add_metric(metric_name:str):
     """
     Add new Metric if not already existing
     """
+    metric: Metric = None
+    status_code: int = None
+    metric, status_code = metrics.add_metric(metric_name)
     
-    metric:Metric = metrics.add_metric(metric_name)
-    if metric:
-        return jsonify({'message': f'{metric_name} added'}), 201
+    if status_code == StatusCodes.NEW:
+        return jsonify({'success': f'{metric_name} was created'}), 201
+    elif status_code == StatusCodes.EXISTING:
+        return jsonify({'success': f'{metric_name} already exists'}), 201
+    elif status_code == StatusCodes.ERROR:
+        return jsonify({'error': f'something went wrong with {metric_name}'}), 400
     
     return jsonify({'error': f'{metric_name} could not be added'}), 400
 
@@ -45,12 +56,17 @@ def update_metric(metric_name:str):
     value = data.get('value', 1)
     metric:Metric = metrics.get_metric(metric_name)
     
+    if type(label) == list:
+        label = tuple(label)
+    
+    print(metric, label, value, data)
+    
     if not label:
         return jsonify({'error': 'Missing label'}), 404
     
     if metric:
         metric.update(label, value)        
-        return jsonify({'message': f'Metric {metric_name} incremented by {value}'}), 200
+        return jsonify({'success': metric.get(label)}), 202
 
     return jsonify({'error': 'Metric not found'}), 404
     
