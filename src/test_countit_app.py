@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import requests
-import inspect
 from functools import wraps
 from countit_client import CountItClient
 
@@ -21,8 +20,9 @@ def try_except_decorator(func):
         try:
             func(*args, **kwargs)
             passed += 1
+            print(f"{func.__name__} passed")
         except Exception as e:
-            print(f"An error occurred in {func.__name__}: {e}")
+            print(f"{func.__name__} failed: {e}")
             errors += 1
 
     return wrapper
@@ -30,47 +30,51 @@ def try_except_decorator(func):
 
 @try_except_decorator
 def test_add_metric():
-    metric_name = "test_counter"
+    metric_name = "test_counter"    
+    response = cic.add_metric(metric_name)
+    expected = f'{metric_name} was created'
+    assert expected in response
     
-    response = cic.add_metric('wusel')
-    assert response.status_code == 201
-    assert response == {'message': f'{metric_name} was created'}
+    response = cic.add_metric(metric_name)
+    expected = f'{metric_name} already exists'
+    assert expected in response
 
     
 @try_except_decorator
 def test_show_metrics():
-
-    response = requests.get(f'{BASE_URL}/countit_metrics')
-    assert 'test_counter' in response.json()
+    metric_name = "test_counter"    
+    response = cic.metrics()
+    expected = "test_counter"
+    assert expected in response
 
 
 @try_except_decorator
 def test_update_counter():
-
-    # Ensure metric exists first
-    requests.get(f'{BASE_URL}/new/test_counter')
-
-    # Update the counter - no label
-    response = requests.post(f'{BASE_URL}/update/test_counter', json={'value': 5})
-    assert response.status_code == 404, f"received: {response.status_code}"
+    metric_name = "test_counter"    
+    response = cic.update(metric_name)
+    expected = 1    
+    assert response == expected
     
-    # Update the counter - no label
-    response = requests.post(f'{BASE_URL}/update/test_counter', json={'label': 'test', 'value': 5})
-    assert response.status_code == 200, f"received: {response.status_code}"    
+    response = cic.update(metric_name, label='test_1')
+    expected = 1
+    assert response == expected
     
-    # Validate metric update
-    response = requests.get(f'{BASE_URL}/countit_metrics')
-    assert response.status_code == 200
-    metrics = response.json()
-    assert 'test_counter' in metrics
-    # You might need to adapt this if there's a way to validate the exact counter value
-
-
+    response = cic.inc(metric_name, label='test_1', value=2)
+    expected = 3
+    assert response == expected
+    
+    
 @try_except_decorator
-def test_update_metric_not_found():
-    response = requests.post(f'{BASE_URL}/update/non_existent_metric', json={'label':'test_123', 'value': 10})
-    assert response.status_code == 404
-    assert response.json() == {'error': 'Metric not found'}
+def test_delete_metric():
+    metric_name = "test_counter"
+    
+    response = cic.delete(metric_name)
+    expected = "removed {metric_name}"
+    assert expected not in response
+        
+    response = cic.metrics()
+    expected = "test_counter"
+    assert expected not in response
 
 
 def main():
@@ -78,8 +82,7 @@ def main():
     test_add_metric()
     test_show_metrics()
     test_update_counter()
-    # test_add_invalid_metric_type()
-    test_update_metric_not_found()
+    test_delete_metric()
     
     print(f"Passed: {passed}")
     print(f"Error(s): {errors}")

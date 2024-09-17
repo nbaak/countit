@@ -79,6 +79,25 @@ class CountItClient():
         
         return None
     
+    def metrics(self):
+        """
+        get metrics from service
+        """
+        response = self.__get(f"/countit_metrics")
+        
+        if response.status_code == 200:
+            return response.json()["success"]
+        
+        return None
+    
+    def delete(self, metric_name):
+        response = self.__post(f"/delete/{metric_name}")
+        
+        if response.status_code == 201:
+            return response.json()["success"]
+        
+        return None
+    
     def __str__(self):
         return f"CountIt: {self.server}:{self.port}"
     

@@ -98,8 +98,15 @@ class Metrics:
     
     def remove_metric(self, metric_name:str) -> bool:
         if metric_name in self.metrics:
+            metric = self.metrics[metric_name]
+            file = os.path.join(metric.data_location, f"{metric_name}.dat")
             dropping = self.metrics.pop(metric_name)
-            if dropping: return True
+            if dropping: 
+                try:
+                    os.remove(file)
+                except Exception as e:
+                    print(e)
+                return True
         
         return False
             

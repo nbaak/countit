@@ -23,7 +23,7 @@ def get_metrics() -> str:
     Endpoint to get the current value of the counter.
     """
     
-    return jsonify(metrics.show_metrics()), 200
+    return jsonify({'success': metrics.show_metrics()}), 200
 
 
 @app.route('/new/<metric_name>')
@@ -65,17 +65,15 @@ def update_metric(metric_name:str):
     if type(label) == list:
         label = tuple(label)
     
-    print(metric, label, value, data)
-    
     if not label:
         return jsonify({'error': 'Missing label'}), 404
     
     if metric:
-        print("Update:", label, "by", value)
         metric.update(label, value)        
         return jsonify({'success': metric.get(label)}), 202
 
     return jsonify({'error': 'Metric not found'}), 404
+
 
 @app.route("/labels/<metric_name>", methods=["GET"])
 def get_labels(metric_name:str):
@@ -105,7 +103,19 @@ def get_metric_label_value(metric_name:str):
             
     return jsonify({'error': 'Metric not found'}), 404   
 
+
+@app.route("/delete/<metric_name>", methods=["POST"])
+def delete_metric(metric_name:str):
+    try:
+        data = request.json
+    except:
+        data = {}
     
+    if metrics.remove_metric(metric_name):
+        return jsonify({"success": f'removed {metric_name}'}), 201
+            
+    return jsonify({'error': 'Metric not found'}), 404       
+
         
 if __name__ == '__main__':
     app.run(debug=True)
