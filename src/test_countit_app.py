@@ -1,34 +1,30 @@
 #!/usr/bin/env python3
 
-import requests
-from functools import wraps
 from countit_client import CountItClient
 
-BASE_URL = 'http://localhost:5000'
 passed = 0
 errors = 0
 
 cic = CountItClient("http://localhost", 5000)
 
 
-def try_except_decorator(func):
+def test_case(func):
 
-    @wraps(func)
     def wrapper(*args, **kwargs):
         global passed
         global errors
         try:
             func(*args, **kwargs)
             passed += 1
-            print(f"{func.__name__} passed")
+            print(f"'{func.__name__}' passed")
         except Exception as e:
-            print(f"{func.__name__} failed: {e}")
+            print(f"'{func.__name__}' failed: {e}")
             errors += 1
 
     return wrapper
 
 
-@try_except_decorator
+@test_case
 def test_add_metric():
     metric_name = "test_counter"    
     response = cic.add_metric(metric_name)
@@ -40,7 +36,7 @@ def test_add_metric():
     assert expected in response
 
     
-@try_except_decorator
+@test_case
 def test_show_metrics():
     metric_name = "test_counter"    
     response = cic.metrics()
@@ -48,7 +44,7 @@ def test_show_metrics():
     assert expected in response
 
 
-@try_except_decorator
+@test_case
 def test_update_counter():
     metric_name = "test_counter"    
     response = cic.update(metric_name)
@@ -64,7 +60,7 @@ def test_update_counter():
     assert response == expected
     
     
-@try_except_decorator
+@test_case
 def test_delete_metric():
     metric_name = "test_counter"
     
