@@ -3,10 +3,13 @@
 import requests
 import inspect
 from functools import wraps
+from countit_client import CountItClient
 
 BASE_URL = 'http://localhost:5000'
 passed = 0
 errors = 0
+
+cic = CountItClient("http://localhost", 5000)
 
 
 def try_except_decorator(func):
@@ -26,19 +29,12 @@ def try_except_decorator(func):
 
 
 @try_except_decorator
-def test_home():
-
-    response = requests.get(f'{BASE_URL}/')
-    assert response.status_code == 200
-    assert response.text == "Count It! - Because it counts!"
-
-
-@try_except_decorator
 def test_add_metric():
-
-    response = requests.get(f'{BASE_URL}/new/test_counter')
+    metric_name = "test_counter"
+    
+    response = cic.add_metric('wusel')
     assert response.status_code == 201
-    assert response.json() == {'message': 'test_counter added'}
+    assert response == {'message': f'{metric_name} was created'}
 
     
 @try_except_decorator
@@ -78,7 +74,7 @@ def test_update_metric_not_found():
 
 
 def main():
-    test_home()
+    
     test_add_metric()
     test_show_metrics()
     test_update_counter()

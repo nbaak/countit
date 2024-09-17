@@ -1,6 +1,6 @@
+import os
 import pickle
 from typing import Union
-import os
 from countit_status_codes import StatusCodes
 
 

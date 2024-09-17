@@ -1,4 +1,5 @@
 import requests
+from dict_builder import dict_builder
 
 
 class CountItClient():
@@ -38,11 +39,7 @@ class CountItClient():
         """
         increases the metric label by value
         """
-        data = {}
-        if label:
-            data['label'] = label
-        if value:
-            data['value'] = value
+        data = dict_builder(label=label, value=value)
              
         response = self.__post(f"/inc/{metric_name}", data)
         
@@ -73,9 +70,7 @@ class CountItClient():
         """
         get labels of metric
         """
-        data = {}
-        if label:
-            data['label'] = label
+        data = dict_builder(label=label)
             
         response = self.__post(f"/get/{metric_name}", data)
         
