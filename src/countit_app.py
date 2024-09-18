@@ -10,42 +10,57 @@ try:
 except:
     pass
 
+app.config["SECRET"] = ""  # secret service?
+
+
+def validate(secret:str, passphrase:str) -> bool:
+    if not secret: return True
+    if not passphrase: return False
+    return secret == passphrase
+
 
 # Define routes
-@app.route('/')
+@app.route("/")
 def home():
     return "Count It! - Because it counts!"
 
 
-@app.route('/countit_metrics', methods=['GET'])
+@app.route("/countit_metrics", methods=["GET"])
 def get_metrics() -> str:
     """
     Endpoint to get the current value of the counter.
     """    
-    return jsonify({'success': metrics.show_metrics()}), 200
+    return jsonify({"success": metrics.show_metrics()}), 200
 
 
-@app.route('/new/<metric_name>')
+@app.route("/new/<metric_name>", methods=["POST"])
 def add_metric(metric_name:str):
     """
     Add new Metric if not already existing
     """
     metric: Metric = None
     status_code: int = None
-    metric, status_code = metrics.add_metric(metric_name)
+    
+    try:
+        data = request.json
+    except:
+        data = {}
+        
+    password = data.get("password", "")
+    metric, status_code = metrics.add_metric(metric_name, password=password)
     
     if status_code == StatusCodes.NEW:
-        return jsonify({'success': f'{metric_name} was created'}), 201
+        return jsonify({"success": f"{metric_name} was created"}), 201
     elif status_code == StatusCodes.EXISTING:
-        return jsonify({'success': f'{metric_name} already exists'}), 201
+        return jsonify({"success": f"{metric_name} already exists"}), 201
     elif status_code == StatusCodes.ERROR:
-        return jsonify({'error': f'something went wrong with {metric_name}'}), 400
+        return jsonify({"error": f"something went wrong with {metric_name}"}), 400
     
-    return jsonify({'error': f'{metric_name} could not be added'}), 400
+    return jsonify({"error": f"{metric_name} could not be added"}), 400
 
 
-@app.route('/inc/<metric_name>', methods=['POST'])
-@app.route('/update/<metric_name>', methods=['POST'])
+@app.route("/inc/<metric_name>", methods=["POST"])
+@app.route("/update/<metric_name>", methods=["POST"])
 def update_metric(metric_name:str):
     """
     Update the specified metric.
@@ -55,23 +70,26 @@ def update_metric(metric_name:str):
     except:
         data = {}
         
-    label = data.get('label', "__default_label__")
-    value = data.get('value', 1)
+    label = data.get("label", "__default_label__")
+    value = data.get("value", 1)
+    password = data.get("password", "") # metric password
     
     metric:Metric = metrics.get_metric(metric_name)
+    if not validate(metric.config["password"], password):
+        return jsonify({"error": "Access Denied"}), 403
     
     # because lists are not hashable
     if type(label) == list:
         label = tuple(label)
     
     if not label:
-        return jsonify({'error': 'Missing label'}), 404
+        return jsonify({"error": "Missing label"}), 404
     
     if metric:
         metric.update(label, value)        
-        return jsonify({'success': metric.get(label)}), 202
+        return jsonify({"success": metric.get(label)}), 202
 
-    return jsonify({'error': 'Metric not found'}), 404
+    return jsonify({"error": "Metric not found"}), 404
 
 
 @app.route("/labels/<metric_name>", methods=["GET"])
@@ -82,7 +100,7 @@ def get_labels(metric_name:str):
         labels = metric.labels()
         return jsonify({"success": labels}), 201
     
-    return jsonify({'error': 'Metric not found'}), 404
+    return jsonify({"error": "Metric not found"}), 404
 
 
 @app.route("/get/<metric_name>", methods=["POST"])
@@ -92,15 +110,15 @@ def get_metric_label_value(metric_name:str):
     except:
         data = {}
         
-    label = data.get('label', "__default_label__")    
+    label = data.get("label", "__default_label__")    
     metric:Metric = metrics.get_metric(metric_name)
     
     if metric and label:
         value = metric.get(label)
         if value != None: return jsonify({"success": value}), 201
-        else: return jsonify({'error': 'Label not found'}), 404
+        else: return jsonify({"error": "Label not found"}), 404
             
-    return jsonify({'error': 'Metric not found'}), 404   
+    return jsonify({"error": "Metric not found"}), 404   
 
 
 @app.route("/delete/<metric_name>", methods=["POST"])
@@ -109,12 +127,18 @@ def delete_metric(metric_name:str):
         data = request.json
     except:
         data = {}
+        
+    password = data.get("password", "")
+    
+    metric:Metric = metrics.get_metric(metric_name)
+    if not validate(metric.config["password"], password):
+        return jsonify({"error": "Access Denied"}), 403
     
     if metrics.remove_metric(metric_name):
-        return jsonify({"success": f'removed {metric_name}'}), 201
+        return jsonify({"success": f"removed {metric_name}"}), 201
             
-    return jsonify({'error': 'Metric not found'}), 404       
+    return jsonify({"error": "Metric not found"}), 404       
 
         
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)

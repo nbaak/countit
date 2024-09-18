@@ -21,25 +21,26 @@ class CountItClient():
             if data:
                 response = requests.post(f"{self.server}:{self.port}/{endpoint}", json=data)
             else:
-                response = requests.post(f"{self.server}:{self.port}/{endpoint}")
+                response = requests.post(f"{self.server}:{self.port}/{endpoint}", json={})
             return response        
         except Exception as e:
             print(e)
             return "Server not available"
         
-    def add_metric(self, metric_name) -> bool:
-        response = self.__get(f"/new/{metric_name}")
+    def add_metric(self, metric_name, password="") -> bool:
+        data = dict_builder(password=password)
+        response = self.__post(f"/new/{metric_name}", data)
         
         if response.status_code == 201:
             return response.json()["success"]
         
         return False
     
-    def inc(self, metric_name:str, *args, label=None, value=None) -> bool:
+    def inc(self, metric_name:str, *args, label=None, value=None, password=None) -> bool:
         """
         increases the metric label by value
         """
-        data = dict_builder(label=label, value=value)
+        data = dict_builder(label=label, value=value, password=password)
              
         response = self.__post(f"/inc/{metric_name}", data)
         
@@ -48,12 +49,12 @@ class CountItClient():
         
         return False
     
-    def update(self, metric_name:str, *args, label=None, value=None) -> bool:
+    def update(self, metric_name:str, *args, label=None, value=None, password=None) -> bool:
         """
         updates the metric label by value
         same as inc
         """
-        return self.inc(metric_name, label=label, value=value)
+        return self.inc(metric_name, label=label, value=value, password=password)
     
     def labels(self, metric_name:str):
         """
@@ -90,8 +91,9 @@ class CountItClient():
         
         return None
     
-    def delete(self, metric_name):
-        response = self.__post(f"/delete/{metric_name}")
+    def delete(self, metric_name, password=None):
+        data = dict_builder(password=password)
+        response = self.__post(f"/delete/{metric_name}", data)
         
         if response.status_code == 201:
             return response.json()["success"]

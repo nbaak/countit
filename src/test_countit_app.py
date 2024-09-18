@@ -29,10 +29,23 @@ def test_add_metric():
     metric_name = "test_counter"    
     response = cic.add_metric(metric_name)
     expected = f'{metric_name} was created'
-    assert expected in response
+    assert expected == response
     
     response = cic.add_metric(metric_name)
     expected = f'{metric_name} already exists'
+    assert expected == response
+
+
+@test_case
+def test_add_metric_with_password():
+    metric_name = "test_counter"    
+    response = cic.add_metric(metric_name, "test1234")
+    expected = f'{metric_name} already exists'
+    assert expected == response
+    
+    metric_name = "test_counter_2"    
+    response = cic.add_metric(metric_name, "test1234")
+    expected = f'{metric_name} was created'
     assert expected == response
 
     
@@ -58,27 +71,51 @@ def test_update_counter():
     response = cic.inc(metric_name, label='test_1', value=2)
     expected = 3
     assert response == expected
-    
+
+
+@test_case
+def test_update_counter_with_password():
+    metric_name = "test_counter_2"    
+    response = cic.update(metric_name, label=(1, 2), password="test1234")
+    expected = 1
+    assert expected == response
+
     
 @test_case
 def test_delete_metric():
     metric_name = "test_counter"
     
     response = cic.delete(metric_name)
-    expected = "removed {metric_name}"
-    assert expected not in response
+    expected = f"removed {metric_name}"
+    assert expected == response
         
     response = cic.metrics()
     expected = "test_counter"
+    assert expected not in response
+    
+    
+@test_case
+def test_delete_metric_with_password():
+    metric_name = "test_counter_2"
+    
+    response = cic.delete(metric_name, password="test1234")
+    expected = f"removed {metric_name}"
+    assert expected == response
+        
+    response = cic.metrics()
+    expected = f"{metric_name}"
     assert expected not in response
 
 
 def main():
     
     test_add_metric()
+    test_add_metric_with_password()
     test_show_metrics()
     test_update_counter()
+    test_update_counter_with_password()
     test_delete_metric()
+    test_delete_metric_with_password()
     
     print(f"Passed: {passed}")
     print(f"Error(s): {errors}")
