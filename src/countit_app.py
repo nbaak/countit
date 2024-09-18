@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from flask import Flask, jsonify, request
-from countit_metrics import Metrics, Metric
-from countit_status_codes import StatusCodes
+from countit.metrics import Metrics, Metric
+from countit.countit_status_codes import StatusCodes
 
 app = Flask(__name__)
 metrics = Metrics()
@@ -21,8 +21,7 @@ def home():
 def get_metrics() -> str:
     """
     Endpoint to get the current value of the counter.
-    """
-    
+    """    
     return jsonify({'success': metrics.show_metrics()}), 200
 
 

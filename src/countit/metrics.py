@@ -1,13 +1,14 @@
 import os
 import pickle
 from typing import Union
-from countit_status_codes import StatusCodes
+from countit.countit_status_codes import StatusCodes
 
 
 class Metric:
     
-    def __init__(self, metric_name:str, data_location:str, labels:list=None, password=None, file_extension=".bin"):
+    def __init__(self, metric_name:str, data_location:str, labels:list=None, password=None, file_extension:str=".bin"):
         self.metric_name = metric_name
+        file_extension = file_extension if not file_extension.startswith('.') else file_extension[1:]
         self.config = {"password": password, "file_ext": file_extension}
         
         self.data_location = data_location
@@ -106,7 +107,8 @@ class Metrics:
     def remove_metric(self, metric_name:str) -> bool:
         if metric_name in self.metrics:
             metric = self.metrics[metric_name]
-            file = os.path.join(metric.data_location, f"{metric_name}.dat")
+            ext = metric.config["file_ext"]
+            file = os.path.join(metric.data_location, f"{metric_name}.{ext}")
             dropping = self.metrics.pop(metric_name)
             if dropping: 
                 try:

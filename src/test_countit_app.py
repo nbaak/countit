@@ -33,7 +33,7 @@ def test_add_metric():
     
     response = cic.add_metric(metric_name)
     expected = f'{metric_name} already exists'
-    assert expected in response
+    assert expected == response
 
     
 @test_case
