@@ -6,14 +6,15 @@ from countit_status_codes import StatusCodes
 
 class Metric:
     
-    def __init__(self, metric_name:str, data_location:str, labels:list=None):
+    def __init__(self, metric_name:str, data_location:str, labels:list=None, password=None, file_extension=".bin"):
         self.metric_name = metric_name
+        self.config = {"password": password, "file_ext": file_extension}
         
         self.data_location = data_location
         if not os.path.isdir(self.data_location):
             os.mkdir(self.data_location)
             
-        self.data = {'__default_label__': 0}
+        self.data = {"__default_label__": 0}
         
         # experimental
         if labels:
@@ -58,15 +59,20 @@ class Metric:
         return [label for label in self.data.keys()]
     
     def save(self):
-        path = os.path.join(self.data_location, f"{self.metric_name}.dat") 
-        with open(path, 'wb') as f:
-            pickle.dump(self.data, f)
+        ext = self.config["file_ext"]
+        path = os.path.join(self.data_location, f"{self.metric_name}.{ext}")
+        storage_container = {"data": self.data, "config": self.config}
+        with open(path, "wb") as f:
+            pickle.dump(storage_container, f)
     
     def load(self):
-        path = os.path.join(self.data_location, f"{self.metric_name}.dat")
+        ext = self.config["file_ext"]
+        path = os.path.join(self.data_location, f"{self.metric_name}.{ext}")
         try:
-            with open(path, 'rb') as f:
-                self.data = pickle.load(f)
+            with open(path, "rb") as f:
+                storage_container = pickle.load(f)
+                self.data = storage_container["data"]
+                self.config = storage_container["config"]
         except Exception as e:
             print(e)
             
@@ -81,13 +87,14 @@ class Metrics:
     
     def __init__(self, data_location:str="./data_metrics"):
         self.metrics = {}
+        
         self.data_path = data_location
         
-    def add_metric(self, metric_name:str) -> Union[Metric, int]:
+    def add_metric(self, metric_name:str, password:Union[None, str]=None) -> Union[Metric, int]:
         status_code = None
         
         if metric_name not in self.metrics:
-            self.metrics[metric_name] = Metric(metric_name, self.data_path)
+            self.metrics[metric_name] = Metric(metric_name=metric_name, data_location=self.data_path, password=password)
             status_code = StatusCodes.NEW
         elif metric_name in self.metrics:
             status_code = StatusCodes.EXISTING
@@ -131,22 +138,22 @@ class Metrics:
             return
         
         for file in files:
-            metric_name = file.split('.')[0]
+            metric_name = file.split(".")[0]
             metric, _ = self.add_metric(metric_name)
             metric.load()
             
 
 
 def test():
-    metrics = Metrics(data_location='./data_metrics')
+    metrics = Metrics(data_location="./data_metrics")
     metrics.load()
-    counter = metrics.add_metric('Counter')
+    counter, status_code = metrics.add_metric("Counter")
     
-    counter.inc('up', 1)
-    counter.inc('up', 1)
-    counter.inc('up', 3)
+    counter.inc("up", 1)
+    counter.inc("up", 1)
+    counter.inc("up", 3)
     
-    counter.set('dd', 7)
+    counter.set("dd", 7)
     
     print(f"Counter -up-  has value {counter.get('up')}")
     print(f"Counter -dd- has value {counter.get('dd')}")
@@ -154,10 +161,10 @@ def test():
     
     print(metrics.show_metrics())
     print(counter.labels())
-    # counter.remove('up')
+    # counter.remove("up")
     print(counter.labels())
     
-    # metrics.remove_metric('Counter')
+    # metrics.remove_metric("Counter")
     
     metrics.save()
 
