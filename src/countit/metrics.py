@@ -136,7 +136,7 @@ class Metrics:
         try:
             files = os.listdir(self.data_path)
         except Exception as e:
-            print(e)
+            print(f"Warning: folder {self.data_path} does not exist")
             return
         
         for file in files:

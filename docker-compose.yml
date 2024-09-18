@@ -1,0 +1,12 @@
+# version: '3.1'
+
+services:
+  countit:
+    build: .
+    image: 'k3nny/countit'
+    container_name: 'countit'
+    #volumes:
+    #  - ./data:/app/data_metrics
+    ports:
+      - '127.0.0.1:5000:5000'
+    restart: unless-stopped

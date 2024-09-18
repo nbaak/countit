@@ -20,7 +20,7 @@ def validate(secret:str, passphrase:str) -> bool:
 
 
 # Define routes
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
     return "Count It! - Because it counts!"
 
@@ -141,4 +141,4 @@ def delete_metric(metric_name:str):
 
         
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
