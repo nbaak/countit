@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 from flask import Flask, jsonify, request
+import logging
 from countit.metrics import Metrics, Metric
 from countit.countit_status_codes import StatusCodes
 
 app = Flask(__name__)
-metrics = Metrics()
+app.metrics = Metrics()
 try:
-    metrics.load()
+    app.metrics.load()
 except:
     pass
 
+metrics = app.metrics
+
 app.config["SECRET"] = ""  # secret service?
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
 def validate(secret:str, passphrase:str) -> bool:
@@ -72,9 +76,12 @@ def update_metric(metric_name:str):
         
     label = data.get("label", "__default_label__")
     value = data.get("value", 1)
-    password = data.get("password", "") # metric password
+    password = data.get("password", "")  # metric password
     
     metric:Metric = metrics.get_metric(metric_name)
+    if not metric:
+        return jsonify({"error": "Metric not found"}), 404
+    
     if not validate(metric.config["password"], password):
         return jsonify({"error": "Access Denied"}), 403
     
@@ -89,7 +96,7 @@ def update_metric(metric_name:str):
         metric.update(label, value)        
         return jsonify({"success": metric.get(label)}), 202
 
-    return jsonify({"error": "Metric not found"}), 404
+    return jsonify({"error": "ERROR"}), 404
 
 
 @app.route("/labels/<metric_name>", methods=["GET"])
@@ -131,13 +138,16 @@ def delete_metric(metric_name:str):
     password = data.get("password", "")
     
     metric:Metric = metrics.get_metric(metric_name)
+    if not metric:
+        return jsonify({"error": "Metric not found"}), 404
+    
     if not validate(metric.config["password"], password):
         return jsonify({"error": "Access Denied"}), 403
     
     if metrics.remove_metric(metric_name):
         return jsonify({"success": f"removed {metric_name}"}), 201
             
-    return jsonify({"error": "Metric not found"}), 404       
+    return jsonify({"error": "ERROR"}), 404       
 
         
 if __name__ == "__main__":

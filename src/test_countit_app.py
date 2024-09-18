@@ -54,7 +54,7 @@ def test_show_metrics():
     metric_name = "test_counter"    
     response = cic.metrics()
     expected = "test_counter"
-    assert expected in response
+    assert expected in response, f"received: {response}"
 
 
 @test_case

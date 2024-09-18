@@ -26,4 +26,4 @@ USER appuser
 # Expose the port the app runs on
 EXPOSE 5000
 
-ENTRYPOINT ["python", "-u", "/app/countit_app.py"]
+CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:5000", "countit_app:app"]

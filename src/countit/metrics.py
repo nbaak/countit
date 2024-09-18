@@ -1,6 +1,7 @@
 import os
 import pickle
 from typing import Union
+from filelock import FileLock, Timeout
 from countit.countit_status_codes import StatusCodes
 
 
@@ -62,9 +63,11 @@ class Metric:
     def save(self):
         ext = self.config["file_ext"]
         path = os.path.join(self.data_location, f"{self.metric_name}.{ext}")
+        lock = FileLock(path)
         storage_container = {"data": self.data, "config": self.config}
-        with open(path, "wb") as f:
-            pickle.dump(storage_container, f)
+        with lock.acquire(timeout=10):
+            with open(path, "wb") as f:
+                pickle.dump(storage_container, f)
     
     def load(self):
         ext = self.config["file_ext"]
