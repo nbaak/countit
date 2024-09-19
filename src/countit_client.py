@@ -1,23 +1,42 @@
+import os
 import requests
 
 
-def dict_builder(*args, **kwargs):
+def read_token(token_file):
+    if os.path.exists(token_file):
+        with open(token_file, 'r') as f:
+            return f.read()
+    return None
+
+
+def dict_builder(in_dict=None, *args, **kwargs):
+    parse_dict:dict = in_dict or kwargs
     new_dict = {}
-    for label, value in kwargs.items():
+    for label, value in parse_dict.items():
         if value != None: new_dict[label] = value 
         
     return new_dict
 
 
+def build_headers(token:str):
+    headers = {
+        "Authorization": f"{token}",
+        "Content-Type": "application/json"
+    }
+    return headers
+
+
 class CountItClient():
     
-    def __init__(self, server:str, port:int):
+    def __init__(self, server:str, port:int, token_file:str=None):
         self.server = server
         self.port = port
+        self.token = read_token(token_file) 
         
     def __get(self, endpoint):
         try:
-            response = requests.get(f"{self.server}:{self.port}/{endpoint}")
+            headers = build_headers(self.token)
+            response = requests.get(f"{self.server}:{self.port}/{endpoint}", headers=headers)
             return response
         except Exception as e:
             print(e)
@@ -115,22 +134,14 @@ class CountItClient():
     
     
 def test():
-    cic = CountItClient("http://localhost", 5000)
-    print(cic.add_metric('test_metric'))
-    
-    print(cic.inc('test_metric', label='test_1', value=3))
-    print(cic.inc('test_metric', label=(4, 2), value=2))
-    print(cic.inc('test_metric', label=("1.2.3.4", 5001, 66), value=2))
-    print(cic.inc('test_metric'))
-    
-    print("Labels:", cic.labels("test_metric"))
-    print(cic.get('test_metric', label='test_1'))
-    print(cic.get('test_metric'))
-    
-    print(cic.add_metric('test_metric_2'))
-    print("Labels:", cic.labels("test_metric_2"))
-    print(cic.get('test_metric_2'))
-    
+    # test dict builder
+    d1 = dict_builder(a="a", B=1, c=None, d="123")
+    print(d1)
+    d2 = dict_builder(d1)
+    print(d2)
+    d3 = dict_builder({"a": None, "b": "C", (12, 32): (12, 34, 56)})
+    print(d3)
+
 
 if __name__ == "__main__":
     test()

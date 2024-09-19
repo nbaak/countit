@@ -14,7 +14,7 @@ except:
     pass
 
 app.config["SECRET"] = read_token("auth.token")
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
 def validate(secret:str, passphrase:str) -> bool:
@@ -26,7 +26,6 @@ def validate(secret:str, passphrase:str) -> bool:
 # Define routes
 @app.route("/", methods=["GET"])
 def home():
-    
     phrase = random.choice(["Because It counts!", "You can Count on It!", "Never stop counting!"])
     return f"Count It! - {phrase}"
 
@@ -35,7 +34,10 @@ def home():
 def get_metrics() -> str:
     """
     Endpoint to get the current value of the counter.
-    """    
+    """
+    headers = request.headers
+    auth_header = headers.get('Authorization')
+    print(auth_header)
     return jsonify({"success": metrics.show_metrics()}), 200
 
 

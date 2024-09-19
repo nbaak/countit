@@ -5,7 +5,7 @@ from countit_client import CountItClient
 passed = 0
 errors = 0
 
-cic = CountItClient("http://localhost", 5000)
+cic = CountItClient("http://localhost", 5000, "./auth.token")
 
 
 def test_case(func):
