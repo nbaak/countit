@@ -44,10 +44,12 @@ class CountItClient():
     
     def __post(self, endpoint, data:dict=None):
         try:
+            headers = build_headers(self.token)
+            response = requests.get(f"{self.server}:{self.port}/{endpoint}", headers=headers)
             if data:
-                response = requests.post(f"{self.server}:{self.port}/{endpoint}", json=data)
+                response = requests.post(f"{self.server}:{self.port}/{endpoint}", json=data, headers=headers)
             else:
-                response = requests.post(f"{self.server}:{self.port}/{endpoint}", json={})
+                response = requests.post(f"{self.server}:{self.port}/{endpoint}", json={}, headers=headers)
             return response        
         except Exception as e:
             print(e)

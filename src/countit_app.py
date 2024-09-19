@@ -37,7 +37,7 @@ def get_metrics() -> str:
     """
     headers = request.headers
     auth_header = headers.get('Authorization')
-    print(auth_header)
+
     return jsonify({"success": metrics.show_metrics()}), 200
 
 
@@ -53,6 +53,9 @@ def add_metric(metric_name:str):
         data = request.json
     except:
         data = {}
+        
+    headers = request.headers
+    auth_header = headers.get('Authorization')
         
     password = data.get("password", "")
     metric, status_code = metrics.add_metric(metric_name, password=password)
@@ -78,6 +81,9 @@ def update_metric(metric_name:str):
     except:
         data = {}
         
+    headers = request.headers
+    auth_header = headers.get('Authorization')
+        
     label = data.get("label", "__default_label__")
     value = data.get("value", 1)
     password = data.get("password", "")  # metric password
@@ -86,7 +92,8 @@ def update_metric(metric_name:str):
     if not metric:
         return jsonify({"error": "Metric not found"}), 404
     
-    if not validate(metric.config["password"], password):
+    if not validate(metric.config["password"], password) \
+        or not validate(app.config["SECRET"], auth_header):
         return jsonify({"error": "Access Denied"}), 403
     
     # because lists are not hashable
@@ -105,13 +112,33 @@ def update_metric(metric_name:str):
 
 @app.route("/labels/<metric_name>", methods=["GET"])
 def get_labels(metric_name:str):
+    """
+    Get Labels
+    returns the labels of a metric
+    """
+    try:
+        data = request.json
+    except:
+        data = {}
+        
+    headers = request.headers
+    auth_header = headers.get('Authorization')
+    
+    password = data.get("password", "")
+    
     metric:Metric = metrics.get_metric(metric_name)
+    if not metric:
+        return jsonify({"error": "Metric not found"}), 404
+    
+    if not validate(metric.config["password"], password) \
+        or not validate(app.config["SECRET"], auth_header):
+        return jsonify({"error": "Access Denied"}), 403
     
     if metric:
         labels = metric.labels()
         return jsonify({"success": labels}), 201
     
-    return jsonify({"error": "Metric not found"}), 404
+    return jsonify({"error": "ERROR"}), 404
 
 
 @app.route("/get/<metric_name>", methods=["POST"])
@@ -121,15 +148,26 @@ def get_metric_label_value(metric_name:str):
     except:
         data = {}
         
+    headers = request.headers
+    auth_header = headers.get('Authorization')
+    
+    password = data.get("password", "")
+        
     label = data.get("label", "__default_label__")    
     metric:Metric = metrics.get_metric(metric_name)
+    if not metric:
+        return jsonify({"error": "Metric not found"}), 404
+    
+    if not validate(metric.config["password"], password) \
+        or not validate(app.config["SECRET"], auth_header):
+        return jsonify({"error": "Access Denied"}), 403
     
     if metric and label:
         value = metric.get(label)
         if value != None: return jsonify({"success": value}), 201
         else: return jsonify({"error": "Label not found"}), 404
             
-    return jsonify({"error": "Metric not found"}), 404   
+    return jsonify({"error": "ERROR"}), 404   
 
 
 @app.route("/delete/<metric_name>", methods=["POST"])
@@ -139,11 +177,18 @@ def delete_metric(metric_name:str):
     except:
         data = {}
         
+    headers = request.headers
+    auth_header = headers.get('Authorization')
+        
     password = data.get("password", "")
     
     metric:Metric = metrics.get_metric(metric_name)
     if not metric:
         return jsonify({"error": "Metric not found"}), 404
+    
+    if not validate(metric.config["password"], password) \
+        or not validate(app.config["SECRET"], auth_header):
+        return jsonify({"error": "Access Denied"}), 403
     
     if not validate(metric.config["password"], password):
         return jsonify({"error": "Access Denied"}), 403
