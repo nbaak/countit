@@ -1,5 +1,12 @@
 import requests
-from dict_builder import dict_builder
+
+
+def dict_builder(*args, **kwargs):
+    new_dict = {}
+    for label, value in kwargs.items():
+        if value != None: new_dict[label] = value 
+        
+    return new_dict
 
 
 class CountItClient():
