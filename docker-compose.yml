@@ -8,6 +8,8 @@ services:
     container_name: 'countit'
     #volumes:
     #  - ./data:/app/data_metrics
+    env_file:
+      - ./countit.env
     ports:
       - '127.0.0.1:5000:5000'
     restart: unless-stopped

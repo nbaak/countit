@@ -3,7 +3,8 @@ from flask import Flask, jsonify, request
 import logging
 from countit.metrics import Metrics, Metric
 from countit.countit_status_codes import StatusCodes
-from random import random
+import random
+from countit.token import read_token
 
 app = Flask(__name__)
 metrics = Metrics()
@@ -12,7 +13,7 @@ try:
 except:
     pass
 
-app.config["SECRET"] = ""  # secret service?
+app.config["SECRET"] = read_token("auth.token")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
@@ -25,6 +26,7 @@ def validate(secret:str, passphrase:str) -> bool:
 # Define routes
 @app.route("/", methods=["GET"])
 def home():
+    
     phrase = random.choice(["Because It counts!", "You can Count on It!", "Never stop counting!"])
     return f"Count It! - {phrase}"
 

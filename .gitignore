@@ -4,3 +4,4 @@ __pycache__
 venv
 data_metrics
 widgets.qss
+auth.token
