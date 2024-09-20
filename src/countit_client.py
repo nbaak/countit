@@ -45,7 +45,6 @@ class CountItClient():
     def __post(self, endpoint, data:dict=None):
         try:
             headers = build_headers(self.token)
-            response = requests.get(f"{self.server}:{self.port}/{endpoint}", headers=headers)
             if data:
                 response = requests.post(f"{self.server}:{self.port}/{endpoint}", json=data, headers=headers)
             else:
@@ -55,8 +54,8 @@ class CountItClient():
             print(e)
             return "Server not available"
         
-    def add_metric(self, metric_name, password="") -> bool:
-        data = dict_builder(password=password)
+    def add_metric(self, metric_name) -> bool:
+        data = dict_builder()
         response = self.__post(f"/new/{metric_name}", data)
         
         if response.status_code == 201:
@@ -64,11 +63,11 @@ class CountItClient():
         
         return False
     
-    def inc(self, metric_name:str, *args, label=None, value=None, password=None) -> bool:
+    def inc(self, metric_name:str, *args, label=None, value=None) -> bool:
         """
         increases the metric label by value
         """
-        data = dict_builder(label=label, value=value, password=password)
+        data = dict_builder(label=label, value=value)
              
         response = self.__post(f"/inc/{metric_name}", data)
         
@@ -77,12 +76,12 @@ class CountItClient():
         
         return False
     
-    def update(self, metric_name:str, *args, label=None, value=None, password=None) -> bool:
+    def update(self, metric_name:str, *args, label=None, value=None) -> bool:
         """
         updates the metric label by value
         same as inc
         """
-        return self.inc(metric_name, label=label, value=value, password=password)
+        return self.inc(metric_name, label=label, value=value)
     
     def labels(self, metric_name:str):
         """
