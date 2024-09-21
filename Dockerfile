@@ -24,6 +24,6 @@ RUN groupadd -r appuser -g 1000 && \
 USER appuser
 
 # Expose the port the app runs on
-EXPOSE 5000
+EXPOSE 5050
 
 CMD ["/app/entrypoint.sh"]

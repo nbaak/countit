@@ -13,7 +13,7 @@ try:
 except:
     pass
 
-app.config["SECRET"] = read_token("auth.token")
+app.config["SECRET"] = read_token("auth.token").strip()
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
@@ -53,6 +53,7 @@ def add_metric(metric_name:str):
         data = request.json
     except:
         data = {}
+        
         
     headers = request.headers
     auth_header = headers.get('Authorization')
@@ -187,4 +188,4 @@ def delete_metric(metric_name:str):
 
         
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5050, debug=True)

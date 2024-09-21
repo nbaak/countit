@@ -5,7 +5,7 @@ from countit_client import CountItClient
 passed = 0
 errors = 0
 
-cic = CountItClient("http://localhost", 5000, "./auth.token")
+cic = CountItClient("http://localhost", 5050, "./auth.token")
 
 
 def test_case(func):
@@ -73,8 +73,7 @@ def test_delete_metric():
     assert expected not in response
     
   
-def main():
-    
+def main():    
     test_add_metric()
     test_show_metrics()
     test_update_counter()
