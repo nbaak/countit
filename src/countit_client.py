@@ -60,6 +60,12 @@ class CountItClient():
             print("Server not available")
             return None
         
+    def test_connection(self) -> bool:
+        response = self.__get(f"/test")
+        if response and response.status_code == 200:
+            return True        
+        return False
+        
     def add_metric(self, metric_name) -> str:
         data = dict_builder()
         response = self.__post(f"/new/{metric_name}", data)

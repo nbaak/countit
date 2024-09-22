@@ -24,6 +24,12 @@ def test_case(func):
     return wrapper
 
 
+@test_case 
+def test_connection():
+    response = cic.test_connection()
+    expected = True
+    assert expected == response
+
 @test_case
 def test_add_metric():
     metric_name = "test_counter"    
@@ -73,7 +79,8 @@ def test_delete_metric():
     assert expected not in response
     
   
-def main(): 
+def main():
+    test_connection()
     test_add_metric()
     test_show_metrics()
     test_update_counter()

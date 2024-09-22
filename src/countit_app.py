@@ -30,6 +30,16 @@ def home():
     return f"Count It! - {phrase}"
 
 
+@app.route("/test", methods=["GET"])
+def connection_test():
+    headers = request.headers
+    auth_header = headers.get('Authorization')
+    if not validate(app.config["SECRET"], auth_header):
+        return jsonify({"error": "Access Denied"}), 403
+
+    return jsonify({"success": metrics.show_metrics()}), 200
+
+
 @app.route("/metrics", methods=["GET"])
 def get_metrics() -> str:
     """

@@ -19,7 +19,6 @@ RUN groupadd -r appuser -g 1000 && \
     useradd -u 1000 -r -g appuser -s /sbin/nologin -c "Docker image user" appuser && \
     chown -R appuser:appuser /app
 
-
 # Use the python interpreter to run the application
 USER appuser
 
