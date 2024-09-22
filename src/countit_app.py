@@ -30,13 +30,15 @@ def home():
     return f"Count It! - {phrase}"
 
 
-@app.route("/countit_metrics", methods=["GET"])
+@app.route("/metrics", methods=["GET"])
 def get_metrics() -> str:
     """
     Endpoint to get the current value of the counter.
     """
     headers = request.headers
     auth_header = headers.get('Authorization')
+    if not validate(app.config["SECRET"], auth_header):
+        return jsonify({"error": "Access Denied"}), 403
 
     return jsonify({"success": metrics.show_metrics()}), 200
 
@@ -63,13 +65,13 @@ def add_metric(metric_name:str):
     metric, status_code = metrics.add_metric(metric_name)
     
     if status_code == StatusCodes.NEW:
-        return jsonify({"success": f"{metric_name} was created"}), 201
+        return jsonify({"success": f"{metric_name} created"}), 201
     elif status_code == StatusCodes.EXISTING:
-        return jsonify({"success": f"{metric_name} already exists"}), 201
+        return jsonify({"success": f"{metric_name} exists"}), 201
     elif status_code == StatusCodes.ERROR:
-        return jsonify({"error": f"something went wrong with {metric_name}"}), 400
+        return jsonify({"error": f"{metric_name} error"}), 400
     
-    return jsonify({"error": f"{metric_name} could not be added"}), 400
+    return jsonify({"error": f"{metric_name} error"}), 400
 
 
 @app.route("/inc/<metric_name>", methods=["POST"])
@@ -182,7 +184,7 @@ def delete_metric(metric_name:str):
         return jsonify({"error": "Access Denied"}), 403
      
     if metrics.remove_metric(metric_name):
-        return jsonify({"success": f"removed {metric_name}"}), 201
+        return jsonify({"success": f"{metric_name} removed"}), 201
             
     return jsonify({"error": "ERROR"}), 404       
 

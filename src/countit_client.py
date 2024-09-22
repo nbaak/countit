@@ -1,5 +1,6 @@
 import os
 import requests
+from typing import Union
 
 
 def read_token(token_file):
@@ -28,10 +29,15 @@ def build_headers(token:str):
 
 class CountItClient():
     
-    def __init__(self, server:str, port:int, token_file:str=None):
+    def __init__(self, server:str, port:int, *args, token:str=None, token_file:str=None):
         self.server = server
         self.port = port
-        self.token = read_token(token_file) 
+        if token: 
+            self.token = token
+        elif token == None and token_file:
+            self.token = read_token(token_file)
+        else:
+            self.token = ""
         
     def __get(self, endpoint):
         try:
@@ -39,8 +45,8 @@ class CountItClient():
             response = requests.get(f"{self.server}:{self.port}/{endpoint}", headers=headers)
             return response
         except Exception as e:
-            print(e)
-            return "Server not available"
+            print("Server not available")
+            return None
     
     def __post(self, endpoint, data:dict=None):
         try:
@@ -51,19 +57,19 @@ class CountItClient():
                 response = requests.post(f"{self.server}:{self.port}/{endpoint}", json={}, headers=headers)
             return response        
         except Exception as e:
-            print(e)
-            return "Server not available"
+            print("Server not available")
+            return None
         
-    def add_metric(self, metric_name) -> bool:
+    def add_metric(self, metric_name) -> str:
         data = dict_builder()
         response = self.__post(f"/new/{metric_name}", data)
         
-        if response.status_code == 201:
+        if response and response.status_code == 201:
             return response.json()["success"]
         
-        return False
+        return ""
     
-    def inc(self, metric_name:str, *args, label=None, value=None) -> bool:
+    def inc(self, metric_name:str, *args, label=None, value=None) -> Union[None, int]:
         """
         increases the metric label by value
         """
@@ -71,10 +77,12 @@ class CountItClient():
              
         response = self.__post(f"/inc/{metric_name}", data)
         
-        if response.status_code == 202:
-            return response.json()["success"]
+        if response and response.status_code == 202:
+            value = response.json()["success"]
+            if isinstance(value, (int, float)):
+                return value
         
-        return False
+        return None
     
     def update(self, metric_name:str, *args, label=None, value=None) -> bool:
         """
@@ -83,18 +91,18 @@ class CountItClient():
         """
         return self.inc(metric_name, label=label, value=value)
     
-    def labels(self, metric_name:str):
+    def labels(self, metric_name:str) -> list:
         """
         get labels of metric
         """
         response = self.__get(f"/labels/{metric_name}")
         
-        if response.status_code == 201:
+        if response and response.status_code == 201:
             return response.json()["success"]
         
-        return None
+        return []
     
-    def get(self, metric_name:str, *args, label=None):
+    def get(self, metric_name:str, *args, label=None) -> Union[int, float, None]:
         """
         get labels of metric
         """
@@ -102,30 +110,30 @@ class CountItClient():
             
         response = self.__post(f"/get/{metric_name}", data)
         
-        if response.status_code == 201:
+        if response and response.status_code == 201:
             return response.json()["success"]
         
         return None
     
-    def metrics(self):
+    def metrics(self) -> list:
         """
         get metrics from service
         """
-        response = self.__get(f"/countit_metrics")
+        response = self.__get(f"/metrics")
         
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             return response.json()["success"]
         
-        return None
+        return []
     
-    def delete(self, metric_name, password=None):
-        data = dict_builder(password=password)
+    def delete(self, metric_name) -> str:
+        data = dict_builder()
         response = self.__post(f"/delete/{metric_name}", data)
         
-        if response.status_code == 201:
+        if response and response.status_code == 201:
             return response.json()["success"]
         
-        return None
+        return ""
     
     def __str__(self):
         return f"CountIt: {self.server}:{self.port}"

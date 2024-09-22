@@ -5,7 +5,7 @@ from countit_client import CountItClient
 passed = 0
 errors = 0
 
-cic = CountItClient("http://localhost", 5050, "./auth.token")
+cic = CountItClient("http://localhost", 5050, token_file="./auth.token")
 
 
 def test_case(func):
@@ -28,11 +28,11 @@ def test_case(func):
 def test_add_metric():
     metric_name = "test_counter"    
     response = cic.add_metric(metric_name)
-    expected = f'{metric_name} was created'
+    expected = f'{metric_name} created'
     assert expected == response
     
     response = cic.add_metric(metric_name)
-    expected = f'{metric_name} already exists'
+    expected = f'{metric_name} exists'
     assert expected == response
 
     
@@ -65,7 +65,7 @@ def test_delete_metric():
     metric_name = "test_counter"
     
     response = cic.delete(metric_name)
-    expected = f"removed {metric_name}"
+    expected = f"{metric_name} removed"
     assert expected == response
         
     response = cic.metrics()
@@ -73,7 +73,7 @@ def test_delete_metric():
     assert expected not in response
     
   
-def main():    
+def main(): 
     test_add_metric()
     test_show_metrics()
     test_update_counter()
