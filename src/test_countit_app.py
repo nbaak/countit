@@ -74,6 +74,10 @@ def test_inc_with_tuples():
     expected = 5
     assert response == expected, f"received: {response}"
     
+    response = cic.inc(metric_name, label=("1.2.3.4", 'DE'), value=5)
+    expected = 10
+    assert response == expected, f"received: {response}"
+    
     response = cic.inc(metric_name, label=('172.18.0.1', 'FASEL'), value=7)
     expected = 7
     assert response == expected, f"received: {response}"
@@ -83,11 +87,11 @@ def test_inc_with_tuples():
 def test_sum_of_value():
     metric_name = "test_counter"
     response = cic.sum(metric_name)
-    expected = 16
+    expected = 21
     assert response == expected, f"received: {response} expected {expected}"
     
     response = cic.sum(metric_name, no_default=True)
-    expected = 15
+    expected = 20
     assert response == expected, f"received: {response} expected {expected}"
 
     

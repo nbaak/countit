@@ -58,8 +58,8 @@ def add_metric(metric_name:str):
     """
     Add new Metric if not already existing
     """
-    metric: Metric = None
-    status_code: int = None
+    metric:Metric = None
+    status_code:int = None
     
     try:
         data = request.json
@@ -108,7 +108,7 @@ def update_metric(metric_name:str):
         return jsonify({"error": "Access Denied"}), 403
 
     # because lists are not hashable
-    if type(label) == list:
+    if isinstance(label, list):
         label = tuple(label)
     
     if not label:
@@ -142,6 +142,7 @@ def get_labels(metric_name:str):
     if not validate(app.config["SECRET"], auth_header):
         return jsonify({"error": "Access Denied"}), 403
     
+    
     if metric:
         labels = metric.labels()
         return jsonify({"success": labels}), 201
@@ -167,6 +168,10 @@ def get_metric_label_value(metric_name:str):
     if not validate(app.config["SECRET"], auth_header):
         return jsonify({"error": "Access Denied"}), 403
     
+    # because lists are not hashable
+    if isinstance(label, list):
+        label = tuple(label)
+        
     if metric and label:
         metric.load()
         value = metric.get(label)
