@@ -66,7 +66,6 @@ def add_metric(metric_name:str):
     except:
         data = {}
         
-        
     headers = request.headers
     auth_header = headers.get('Authorization')
     if not validate(app.config["SECRET"], auth_header):
@@ -95,19 +94,19 @@ def update_metric(metric_name:str):
     except:
         data = {}
         
+    logging.info("UPDATE METRIC")
     headers = request.headers
     auth_header = headers.get('Authorization')
         
     label = data.get("label", "__default_label__")
     value = data.get("value", 1)
-    
     metric:Metric = metrics.get_metric(metric_name)
     if not metric:
         return jsonify({"error": "Metric not found"}), 404
     
     if not validate(app.config["SECRET"], auth_header):
         return jsonify({"error": "Access Denied"}), 403
-    
+
     # because lists are not hashable
     if type(label) == list:
         label = tuple(label)
@@ -116,8 +115,8 @@ def update_metric(metric_name:str):
         return jsonify({"error": "Missing label"}), 404
     
     if metric:
-        metric.update(label, value)        
-        return jsonify({"success": metric.get(label)}), 202
+        new_value = metric.update(label, value)
+        return jsonify({"success": new_value}), 202
 
     return jsonify({"error": "ERROR"}), 404
 
@@ -169,6 +168,7 @@ def get_metric_label_value(metric_name:str):
         return jsonify({"error": "Access Denied"}), 403
     
     if metric and label:
+        metric.load()
         value = metric.get(label)
         if value != None: return jsonify({"success": value}), 201
         else: return jsonify({"error": "Label not found"}), 404
@@ -196,8 +196,33 @@ def delete_metric(metric_name:str):
     if metrics.remove_metric(metric_name):
         return jsonify({"success": f"{metric_name} removed"}), 201
             
-    return jsonify({"error": "ERROR"}), 404       
+    return jsonify({"error": "ERROR"}), 404
+
+
+@app.route("/sum/<metric_name>", methods=["GET"])
+def sum_labels(metric_name:str) -> str:
+    """
+    Sum all values in metric
+    """
+    except_default = request.args.get("except_default")  # true/false as str
+
+    headers = request.headers
+    auth_header = headers.get('Authorization')
+    if not validate(app.config["SECRET"], auth_header):
+        return jsonify({"error": "Access Denied"}), 403
+    
+    metric:Metric = metrics.get_metric(metric_name)
+    if not metric:
+        return jsonify({"error": "Metric not found"}), 404
+    
+    if except_default == "true":
+        default_label = metric.config["default_label"]
+        sum_value = sum([v for k, v in metric.data.items() if not k == default_label])
+    else:
+        sum_value = sum([v for v in metric.data.values()])
+    
+    return jsonify({"success": sum_value}), 201    
 
         
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5050, debug=True)
+    app.run(host="0.0.0.0", port=5050, debug=False)

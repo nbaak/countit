@@ -10,13 +10,13 @@ class Metric:
     def __init__(self, metric_name:str, data_location:str, labels:list=None, file_extension:str=".bin"):
         self.metric_name = metric_name
         file_extension = file_extension if not file_extension.startswith('.') else file_extension[1:]
-        self.config = {"file_ext": file_extension}
+        self.config = {"file_ext": file_extension, "default_label": "__default_label__"}
         
         self.data_location = data_location
         if not os.path.isdir(self.data_location):
             os.mkdir(self.data_location)
             
-        self.data = {"__default_label__": 0}
+        self.data = {self.config["default_label"]: 0}
         
         # experimental
         if labels:
@@ -30,10 +30,10 @@ class Metric:
         self.data[label] += value
         
         self.save()
-        return self.data.get(label, None)
+        return self.data[label]
     
     def update(self, label, value:Union[int, float]=1) -> Union[int, float]:
-        self.inc(label, value)
+        return self.inc(label, value)
         
     def set(self, label:str, value:Union[int, float]=1) -> Union[int, float]:
         if not label in self.data:
