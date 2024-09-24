@@ -248,7 +248,6 @@ def get_metric_data(metric_name:str):
     
     if metric:
         data = dict_as_transport_list(metric.data)
-        print(data)
         return jsonify({"success": data}), 201
     
     return jsonify({"error": "ERROR"}), 404
