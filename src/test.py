@@ -1,13 +1,12 @@
 
+import json
+from countit.transport_list import dict_as_transport_list
 
-label = (1, 2, 3, 4)
-label2 = (11, 22, 33, 44)
 
-my_dict = {}
-if label not in my_dict:
-    my_dict[label] = 1
+data_dict = {'__default_label__': 1, 'test_1': 3, ('1.2.3.4', 'DE'): 10, ('172.18.0.1', 'FASEL'): 7}
+data_dict = dict_as_transport_list(data_dict)
+for label, value in data_dict:
+    print(label, value)
 
-if not label2 in my_dict:
-    my_dict[label2] = 666
-    
-print(my_dict)
+
+print(json.loads(data_dict))

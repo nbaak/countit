@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 import logging
 from countit.metrics import Metrics, Metric
 from countit.countit_status_codes import StatusCodes
+from countit.transport_list import dict_as_transport_list
 import random
 from countit.token import read_token
 
@@ -226,7 +227,31 @@ def sum_labels(metric_name:str) -> str:
     else:
         sum_value = sum([v for v in metric.data.values()])
     
-    return jsonify({"success": sum_value}), 201    
+    return jsonify({"success": sum_value}), 201
+
+
+@app.route("/data/<metric_name>", methods=["GET"])
+def get_metric_data(metric_name:str):
+    """
+    Get Labels
+    returns the labels of a metric
+    """        
+    headers = request.headers
+    auth_header = headers.get('Authorization')
+    
+    metric:Metric = metrics.get_metric(metric_name)
+    if not metric:
+        return jsonify({"error": "Metric not found"}), 404
+    
+    if not validate(app.config["SECRET"], auth_header):
+        return jsonify({"error": "Access Denied"}), 403
+    
+    if metric:
+        data = dict_as_transport_list(metric.data)
+        print(data)
+        return jsonify({"success": data}), 201
+    
+    return jsonify({"error": "ERROR"}), 404
 
         
 if __name__ == "__main__":

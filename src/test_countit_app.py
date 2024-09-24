@@ -93,6 +93,14 @@ def test_sum_of_value():
     response = cic.sum(metric_name, no_default=True)
     expected = 20
     assert response == expected, f"received: {response} expected {expected}"
+    
+
+@test_case
+def test_metric_data():
+    metric_name = "test_counter"
+    response = cic.data(metric_name)
+    expected = [['__default_label__', 1], ['test_1', 3], [['1.2.3.4', 'DE'], 10], [['172.18.0.1', 'FASEL'], 7]]
+    assert response == expected, f"received: {response} expected {expected}"
 
     
 @test_case
@@ -116,6 +124,7 @@ def main():
     test_update_counter()
     test_inc_with_tuples()
     test_sum_of_value()
+    test_metric_data()
     
     test_delete_metric()
     
