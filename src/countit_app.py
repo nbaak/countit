@@ -73,7 +73,6 @@ def add_metric(metric_name:str):
         return jsonify({"error": "Access Denied"}), 403
     
     overwrite = data.get("overwrite", False)
-    print(overwrite, type(overwrite))
     if overwrite == "true": overwrite = True     
     metric, status_code = metrics.add_metric(metric_name, overwrite)
     
