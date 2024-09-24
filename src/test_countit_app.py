@@ -107,12 +107,24 @@ def test_metric_data():
 def test_overwrite_metric():
     metric_name = "test_counter"    
     response = cic.add_metric(metric_name, overwrite=True)
-    expected = f'{metric_name} created'
-    assert expected == response
+    expected = f'{metric_name} overwritten'
+    assert expected == response, f"received: {response} expected {expected}"
     
     response = cic.update(metric_name, label="t25", value=25)
     expected = 25
-    assert response == expected, f"received: {response}"
+    assert response == expected, f"received: {response} expected {expected}"
+    
+    response = cic.update(metric_name, label="t25", value=5)
+    expected = 30
+    assert response == expected, f"received: {response} expected {expected}"
+    
+    response = cic.add_metric(metric_name, overwrite=True)
+    expected = f'{metric_name} overwritten'
+    assert expected == response, f"received: {response} expected {expected}"
+    
+    response = cic.update(metric_name, label="t25", value=42)
+    expected = 42
+    assert response == expected, f"received: {response} expected {expected}"
     
     
 @test_case

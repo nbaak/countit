@@ -30,7 +30,7 @@ class Metric:
         self.data[label] += value
         
         self.save()
-        return self.data[label]
+        return self.data.get(label, None)
     
     def update(self, label, value:Union[int, float]=1) -> Union[int, float]:
         return self.inc(label, value)
@@ -99,8 +99,9 @@ class Metrics:
         
         if overwrite and metric_name in self.metrics:
             self.metrics.pop(metric_name)
-        
-        if metric_name not in self.metrics:
+            self.metrics[metric_name] = Metric(metric_name=metric_name, data_location=self.data_path)
+            status_code = StatusCodes.OVERWRITTEN
+        elif metric_name not in self.metrics:
             self.metrics[metric_name] = Metric(metric_name=metric_name, data_location=self.data_path)
             status_code = StatusCodes.NEW
         elif metric_name in self.metrics:
