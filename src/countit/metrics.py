@@ -94,8 +94,11 @@ class Metrics:
         
         self.data_path = data_location
         
-    def add_metric(self, metric_name:str) -> Union[Metric, int]:
+    def add_metric(self, metric_name:str, overwrite=False) -> Union[Metric, int]:
         status_code = None
+        
+        if overwrite and metric_name in self.metrics:
+            self.metrics.pop(metric_name)
         
         if metric_name not in self.metrics:
             self.metrics[metric_name] = Metric(metric_name=metric_name, data_location=self.data_path)

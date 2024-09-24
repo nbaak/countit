@@ -71,8 +71,11 @@ def add_metric(metric_name:str):
     auth_header = headers.get('Authorization')
     if not validate(app.config["SECRET"], auth_header):
         return jsonify({"error": "Access Denied"}), 403
-        
-    metric, status_code = metrics.add_metric(metric_name)
+    
+    overwrite = data.get("overwrite", False)
+    print(overwrite, type(overwrite))
+    if overwrite == "true": overwrite = True     
+    metric, status_code = metrics.add_metric(metric_name, overwrite)
     
     if status_code == StatusCodes.NEW:
         return jsonify({"success": f"{metric_name} created"}), 201
@@ -142,7 +145,6 @@ def get_labels(metric_name:str):
     
     if not validate(app.config["SECRET"], auth_header):
         return jsonify({"error": "Access Denied"}), 403
-    
     
     if metric:
         labels = metric.labels()

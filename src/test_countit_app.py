@@ -102,6 +102,18 @@ def test_metric_data():
     expected = [['__default_label__', 1], ['test_1', 3], [['1.2.3.4', 'DE'], 10], [['172.18.0.1', 'FASEL'], 7]]
     assert response == expected, f"received: {response} expected {expected}"
 
+
+@test_case
+def test_overwrite_metric():
+    metric_name = "test_counter"    
+    response = cic.add_metric(metric_name, overwrite=True)
+    expected = f'{metric_name} created'
+    assert expected == response
+    
+    response = cic.update(metric_name, label="t25", value=25)
+    expected = 25
+    assert response == expected, f"received: {response}"
+    
     
 @test_case
 def test_delete_metric():
@@ -125,6 +137,7 @@ def main():
     test_inc_with_tuples()
     test_sum_of_value()
     test_metric_data()
+    test_overwrite_metric()
     
     test_delete_metric()
     
