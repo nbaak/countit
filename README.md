@@ -196,13 +196,12 @@ This API provides endpoints for managing and tracking metrics. Authentication is
 ```json
 {
   "success": [
-    {"label": "label1", "value": 50},
-    {"label": "label2", "value": 100}
+    ["label1", 50],
+    ["label2", 100],
+    [["tuple", "label"], 150],
   ]
 }
 ```
-
-
 
 
 ## Notes
